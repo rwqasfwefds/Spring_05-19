@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org/DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<mapper namespace="com.example.comment.dao.CommentDao">
+    <sql id="boardColumns">
+        IDX
+        ,BOARD_IDX
+        ,CONTENT
+        ,WRITER
+        ,DELETE_YN
+        ,INSERT_DATE
+        ,UPDATE_DATE
+        ,DELETE_DATE
+    </sql>
+
+    <insert id="insertBoard" parameterType="com.example.comment.model.CommentDto">
+        INSERT INTO TB_COMMENT(
+        <include refid="boardColumns"></include>
+        ) VALUES (
+        SQ_TB_COMMENT.NEXTVAL,
+        #{boardIdx},
+        #{content},
+        #{writer},
+        #{deleteYn},
+        SYSDATE,
+        null,
+        null
+        )
+    </insert>
+
+    <select id="selectBoardDetail" parameterType="Long" resultType="com.example.comment.model.CommentDto">
+        SELECT
+        <include refid="boardColumns"></include>
+        FROM TB_COMMENT
+        WHERE DELETE_YN = 'N'
+        AND IDX = #{idx}
+    </select>
+
+    <select id="selectBoardAllList"
+            parameterType="com.example.comment.model.CommentDto"
+            resultType="com.example.comment.model.CommentDto">
+        SELECT
+        <include refid="boardColumns"></include>
+        FROM TB_COMMENT
+        WHERE DELETE_YN = 'N'
+        ORDER BY IDX DESC
+    </select>
+
+    <update id="deleteBoard" parameterType="Long">
+        UPDATE TB_COMMENT
+        SET DELETE_YN = 'Y'
+        WHERE IDX = #{idx}
+    </update>
+
+    <select id="selectBoardTotalCount"
+            parameterType="com.example.comment.model.CommentDto"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM TB_COMMENT
+        WHERE DELETE_YN = 'N'
+    </select>
+
+    <update id="updateBoard"
+            parameterType="com.example.comment.model.CommentDto">
+        UPDATE TB_COMMENT
+        SET CONTENT = #{content},
+            WRITER = #{writer}
+    </update>
+
+    <!--CDATA = 이 태그가 있는 코드에 꺽새는 XML쪽 꺽새가 아니고 일반 문자열이다 라는 거임-->
+    <select id="selectBoardList"
+            parameterType="com.example.comment.model.CommentDto"
+            resultType="com.example.comment.model.CommentDto">
+        SELECT *
+        FROM(
+        SELECT ROWNUM R, TBB.*
+        FROM TB_COMMENT TBB
+        WHERE ROWNUM &lt;= #{currentPageNo} * #{recordsPerPage}
+        AND DELETE_YN = 'N'
+        ORDER BY IDX DESC
+        )
+        WHERE R &gt; (#{currentPageNo} - 1) * #{recordsPerPage}
+        <include refid="Common.search"></include>
+    </select>
+</mapper>

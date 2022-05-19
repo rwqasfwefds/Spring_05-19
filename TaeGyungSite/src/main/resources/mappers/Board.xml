@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org/DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<mapper namespace="com.example.taegyungsite.dao.BoardDao">
+    <sql id="boardColumns">
+        IDX
+        ,TITLE
+        ,CONTENT
+        ,WRITER
+        ,VIEW_CNT
+        ,NOTICE_YN
+        ,SECRET_YN
+        ,DELETE_YN
+        ,INSERT_TIME
+        ,UPDATE_TIME
+        ,DELETE_TIME
+    </sql>
+
+    <insert id="insertBoard" parameterType="com.example.taegyungsite.model.BoardDto">
+        INSERT INTO TB_BOARD(
+             <include refid="boardColumns"></include>
+        ) VALUES (
+          SQ_TB_BOARD.NEXTVAL
+          ,#{title}
+          ,#{content}
+          ,#{writer}
+          , 0
+          , 'N'
+          , 'N'
+          , 'N'
+          , SYSDATE
+          , null
+          , null
+        )
+    </insert>
+
+<!--DELETE_YN이 'N' 인것만 날리면 됨 한 마디로 사용자는 'Y' 인게 안 보이니깐 삭제된줄 알고 있는거지-->
+<!--보통 데이터는 완전한 삭제를 안 함(왜그렇냐면 복구해달라고 할 수도 있잖슴ㅇㅇ)-->
+    <select id="selectBoardDetail" parameterType="Long" resultType="com.example.taegyungsite.model.BoardDto">
+        SELECT
+        <include refid="boardColumns"></include>
+        FROM TB_BOARD
+        WHERE DELETE_YN = 'N'
+        AND IDX = #{idx}
+    </select>
+
+    <select id="selectBoardAllList"
+            parameterType="com.example.taegyungsite.model.BoardDto"
+            resultType="com.example.taegyungsite.model.BoardDto">
+        SELECT
+        <include refid="boardColumns"></include>
+        FROM TB_BOARD
+        WHERE DELETE_YN = 'N'
+        ORDER BY NOTICE_YN ASC,
+                 IDX DESC,
+                 INSERT_TIME DESC
+    </select>
+
+    <update id="deleteBoard" parameterType="Long">
+        UPDATE TB_BOARD
+        SET DELETE_YN = 'Y',
+            DELETE_TIME = SYSDATE
+        WHERE IDX = #{idx}
+    </update>
+
+    <select id="selectBoardTotalCount"
+            parameterType="com.example.taegyungsite.model.BoardDto"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM TB_BOARD
+        WHERE DELETE_YN = 'N'
+    </select>
+
+    <update id="updateBoard"
+            parameterType="com.example.taegyungsite.model.BoardDto">
+        UPDATE TB_BOARD
+        SET UPDATE_TIME = SYSDATE,
+            TITLE = #{title},
+            CONTENT = #{content},
+            WRITER = #{writer},
+            NOTICE_YN = NVL(#{noticeYn}, 'N'),
+            SECRET_YN = NVL(#{secretYn}, 'N')
+    </update>
+
+<!--CDATA = 이 태그가 있는 코드에 꺽새는 XML쪽 꺽새가 아니고 일반 문자열이다 라는 거임-->
+    <select id="selectBoardList"
+            parameterType="com.example.taegyungsite.model.BoardDto"
+            resultType="com.example.taegyungsite.model.BoardDto">
+<!--    <![CDATA[-->
+<!--        SELECT *-->
+<!--        FROM(-->
+<!--        SELECT ROWNUM R, TBB.*-->
+<!--        FROM TB_BOARD TBB-->
+<!--        WHERE ROWNUM <= #{currentPageNo} * #{recordsPerPage}-->
+<!--        AND DELETE_YN = 'N'-->
+<!--        ORDER BY NOTICE_YN ASC,-->
+<!--                 IDX DESC,-->
+<!--                 INSERT_TIME DESC-->
+<!--        )-->
+<!--        WHERE R > (#{currentPageNo} - 1) * #{recordsPerPage}-->
+<!--        ]]>-->
+
+        SELECT *
+        FROM(
+        SELECT ROWNUM R, TBB.*
+        FROM TB_BOARD TBB
+        WHERE ROWNUM &lt;= #{currentPageNo} * #{recordsPerPage}
+        AND DELETE_YN = 'N'
+        ORDER BY NOTICE_YN ASC,
+                 IDX DESC,
+                 INSERT_TIME DESC
+        )
+        WHERE R &gt; (#{currentPageNo} - 1) * #{recordsPerPage}
+        <include refid="Common.search"></include>
+    </select>
+</mapper>

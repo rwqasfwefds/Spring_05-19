@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org/DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<mapper namespace="Common">
+<!--공통 sql 문 작성-->
+<!--case when문이랑 비슷-->
+    <sql id="search">
+        <!-- 검색 키워드가(searchKetword) 있을 때 -->
+        <if test="searchKeyword != null and searchKeyword != ''">
+            <!-- case when 이랑 비슷 -->
+            <choose>
+                <!-- 검색 유형이(searchType) 있을 때 : title, content, writer -->
+                <when test="searchType != null and searchType != ''">
+                    <choose>
+                        <when test="'title'.equals(searchType)">
+                            AND TITLE LIKE '%' || #{searchKeyword} || '%'
+                        </when>
+                        <when test="'content'.equals(searchType)">
+                            AND TITLE LIKE '%' || #{searchKeyword} || '%'
+                        </when>
+                        <when test="'writer'.equals(searchType)">
+                            AND TITLE LIKE '%' || #{searchKeyword} || '%'
+                        </when>
+                    </choose>
+                </when>
+            </choose>
+        </if>
+    </sql>
+
+</mapper>
